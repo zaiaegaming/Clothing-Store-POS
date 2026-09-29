@@ -1175,7 +1175,7 @@ function OwnerSettingsContent() {
 
                 {/* My Workspace - Owner only. Not shown to Manager or Staff,
                     and it never changes what they see. */}
-                {permissions.canConfigureOwnerLayout && (
+                {/* {permissions.canConfigureOwnerLayout && (
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center mb-2">
                       <LayoutDashboard className="h-5 w-5 text-rose-500 mr-2" />
@@ -1220,10 +1220,10 @@ function OwnerSettingsContent() {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Doc: "Loyalty Program" - Owner + Manager. */}
-                {permissions.canManageLoyaltyProgram && (
+                {/* {permissions.canManageLoyaltyProgram && (
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center mb-6">
                       <Gift className="h-5 w-5 text-rose-500 mr-2" />
@@ -1233,7 +1233,6 @@ function OwnerSettingsContent() {
                     </div>
 
                     <div className="space-y-6">
-                      {/* Enable/Disable Loyalty Program */}
                       <div className="flex items-center justify-between pb-4 border-b border-gray-200">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">
@@ -1251,10 +1250,8 @@ function OwnerSettingsContent() {
                         />
                       </div>
 
-                      {/* Show settings only if enabled */}
                       {settings.loyaltySettings?.enabled && (
                         <>
-                          {/* Points Earning Configuration */}
                           <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 space-y-4">
                             <h3 className="text-sm font-semibold text-rose-900">
                               Points Earning Rules
@@ -1318,7 +1315,6 @@ function OwnerSettingsContent() {
                             </div>
                           </div>
 
-                          {/* Coupon Packages */}
                           <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 space-y-4">
                             <div className="flex items-start justify-between gap-3">
                               <div>
@@ -1577,7 +1573,6 @@ function OwnerSettingsContent() {
                             )}
                           </div>
 
-                          {/* Program Summary */}
                           <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-4">
                             <h3 className="text-sm font-semibold text-rose-900 mb-3">
                                Coupon Package Summary
@@ -1640,7 +1635,7 @@ function OwnerSettingsContent() {
                       )}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Deployment Link Section */}
                 {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

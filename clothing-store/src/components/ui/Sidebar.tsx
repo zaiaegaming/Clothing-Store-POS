@@ -369,56 +369,56 @@ export function Sidebar({
         // },
       ],
     },
-    {
-      id: "requests",
-      label: "Online Sales",
-      icon: "ShoppingCart",
-      roles: ["owner", "manager"],
-      children: [
-        {
-          id: "online-orders",
-          label: "Online Orders",
-          icon: "ShoppingCart",
-          href: "/owner/sales/online-orders",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "online-transactions",
-          label: "Online Transactions",
-          icon: "Wallet",
-          href: "/owner/sales/online-transactions",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "cancellation-requests",
-          label: "Order Cancellation Requests",
-          icon: "XCircle",
-          href: "/owner/requests/cancellations",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "refund-requests",
-          label: "Return Requests",
-          icon: "RotateCcw",
-          href: "/owner/requests/refunds",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "pending-refunds",
-          label: "Refund Payment",
-          icon: "DollarSign",
-          href: "/owner/requests/pending-refunds",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "refund-report",
-          label: "Online Report",
-          icon: "FileText",
-          href: "/owner/requests/refund-report",
-          roles: ["owner", "manager"],
-        },
-      ],
-    },
+    // {
+    //   id: "requests",
+    //   label: "Online Sales",
+    //   icon: "ShoppingCart",
+    //   roles: ["owner", "manager"],
+    //   children: [
+    //     {
+    //       id: "online-orders",
+    //       label: "Online Orders",
+    //       icon: "ShoppingCart",
+    //       href: "/owner/sales/online-orders",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "online-transactions",
+    //       label: "Online Transactions",
+    //       icon: "Wallet",
+    //       href: "/owner/sales/online-transactions",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "cancellation-requests",
+    //       label: "Order Cancellation Requests",
+    //       icon: "XCircle",
+    //       href: "/owner/requests/cancellations",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "refund-requests",
+    //       label: "Return Requests",
+    //       icon: "RotateCcw",
+    //       href: "/owner/requests/refunds",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "pending-refunds",
+    //       label: "Refund Payment",
+    //       icon: "DollarSign",
+    //       href: "/owner/requests/pending-refunds",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "refund-report",
+    //       label: "Online Report",
+    //       icon: "FileText",
+    //       href: "/owner/requests/refund-report",
+    //       roles: ["owner", "manager"],
+    //     },
+    //   ],
+    // },
     {
       id: "stocks",
       label: t.inventory,
@@ -433,28 +433,28 @@ export function Sidebar({
       href: "/owner/inventory/customers",
       roles: ["owner", "manager", "staff"],
     },
-    {
-      id: "promotion-membership",
-      label: "Promotion & Membership",
-      icon: "Gift",
-      roles: ["owner", "manager"],
-      children: [
-        {
-          id: "membership",
-          label: "Membership",
-          icon: "Gift",
-          href: "/owner/membership",
-          roles: ["owner", "manager"],
-        },
-        {
-          id: "online-promotions",
-          label: "Online Promotions",
-          icon: "Tag",
-          href: "/owner/online-promotions",
-          roles: ["owner", "manager"],
-        },
-      ],
-    },
+    // {
+    //   id: "promotion-membership",
+    //   label: "Promotion & Membership",
+    //   icon: "Gift",
+    //   roles: ["owner", "manager"],
+    //   children: [
+    //     {
+    //       id: "membership",
+    //       label: "Membership",
+    //       icon: "Gift",
+    //       href: "/owner/membership",
+    //       roles: ["owner", "manager"],
+    //     },
+    //     {
+    //       id: "online-promotions",
+    //       label: "Online Promotions",
+    //       icon: "Tag",
+    //       href: "/owner/online-promotions",
+    //       roles: ["owner", "manager"],
+    //     },
+    //   ],
+    // },
     {
       id: "expenses",
       label: t.expenses,
@@ -513,13 +513,13 @@ export function Sidebar({
       href: "/owner/staff",
       roles: ["owner"], // Only owner can manage staff
     },
-    {
-      id: "notifications",
-      label: "Notifications",
-      icon: "AlertCircle",
-      href: "/owner/notifications",
-      roles: ["owner", "manager", "staff"], // All roles can access
-    },
+    // {
+    //   id: "notifications",
+    //   label: "Notifications",
+    //   icon: "AlertCircle",
+    //   href: "/owner/notifications",
+    //   roles: ["owner", "manager", "staff"], // All roles can access
+    // },
     {
       id: "settings",
       label: t.settings,

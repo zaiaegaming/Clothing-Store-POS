@@ -24,8 +24,10 @@ import {
   StockItem,
 } from "@/types/stock";
 import { Shop, ShopListResponse } from "@/types/shop";
-import { SettingsService } from "@/services/settingsService";
 import { CategoryService } from "@/services/categoryService";
+import { usePriceCurrency } from "@/hooks/usePriceCurrency";
+import { CurrencyConversionNotice } from "@/components/ui/CurrencyConversionNotice";
+import { SizeQuantityEditor } from "@/components/ui/SizeQuantityEditor";
 import { detectColorName, extractColorsFromImage } from "@/lib/colorUtils";
 
 // Type declaration for BarcodeDetector API
@@ -67,14 +69,27 @@ function EditStockContent() {
   const [releaseDate, setReleaseDate] = useState("");
   const [selectedShops, setSelectedShops] = useState<string[]>([]);
 
-  // Currency state
-  const [defaultCurrency, setDefaultCurrency] = useState<string>("THB");
-  const [currencySymbol, setCurrencySymbol] = useState<string>("฿");
-
   const [isColorless, setIsColorless] = useState(false);
   const [wholesaleTiers, setWholesaleTiers] = useState<WholesaleTier[]>([]);
   const [colorVariants, setColorVariants] = useState<ColorVariant[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
+
+  // Prices follow the currency picked in the top nav bar. The form holds the
+  // amounts as the user sees them, converting once when the stock loads and
+  // once on save, plus re-scaling if the selector changes mid-edit.
+  const currency = usePriceCurrency((convert) => {
+    const rescale = (value: string) =>
+      value === "" || !Number.isFinite(parseFloat(value))
+        ? value
+        : convert(parseFloat(value)).toString();
+
+    setUnitPrice(rescale);
+    setOriginalPrice(rescale);
+    setWholesaleTiers((tiers) =>
+      tiers.map((tier) => ({ ...tier, price: convert(tier.price) })),
+    );
+  });
+  const currencySymbol = currency.priceSymbol;
 
   // Track detected colors for each variant
   const [detectedColors, setDetectedColors] = useState<
@@ -131,8 +146,10 @@ function EditStockContent() {
       setGroupImage(stock.groupImage || "");
       setGroupName(stock.groupName || "");
       setCategory(stock.category || "");
-      setUnitPrice(stock.unitPrice?.toString() || "");
-      setOriginalPrice(stock.originalPrice?.toString() || "");
+      // Stored prices are in the business default currency; show them in the
+      // currency selected in the top nav bar.
+      setUnitPrice(currency.fromBaseString(stock.unitPrice));
+      setOriginalPrice(currency.fromBaseString(stock.originalPrice));
       setReleaseDate(stock.releaseDate || "");
       setSelectedShops(stock.shop ? [stock.shop] : []);
       setIsColorless(stock.isColorless || false);
@@ -142,7 +159,7 @@ function EditStockContent() {
         (stock.wholesaleTiers || []).map((tier, index) => ({
           id: tier.id || `tier-${stock.id}-${index}`, // Use original ID or create unique fallback
           minQuantity: tier.minQuantity,
-          price: tier.price,
+          price: currency.fromBase(tier.price),
         })),
       );
 
@@ -167,28 +184,23 @@ function EditStockContent() {
     }
   };
 
-  // Fetch currency settings
-  const fetchCurrencySettings = async () => {
-    try {
-      const settings = await SettingsService.getBusinessSettings();
-      setDefaultCurrency(settings?.defaultCurrency || "THB");
-      const currencyInfo = SettingsService.getCurrencyInfo(
-        (settings?.defaultCurrency as "THB" | "MMK") || "THB",
-      );
-      setCurrencySymbol(currencyInfo.symbol);
-    } catch (error) {
-      console.error("Error fetching currency settings:", error);
-    }
-  };
-
-  // Load shops, stock data, and currency settings on component mount
+  // Load shops on component mount
   useEffect(() => {
     fetchShops();
-    fetchCurrencySettings();
+  }, []);
+
+  // Wait for the currency settings before loading the stock: the prices have to
+  // be converted into the selected currency as they are put into the form, and
+  // until settings arrive we don't know which currency they are stored in.
+  useEffect(() => {
+    if (!currency.isReady) {
+      return;
+    }
     if (stockId) {
       fetchStockData();
     }
-  }, [stockId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stockId, currency.isReady]);
 
   // Load categories from Firebase
   useEffect(() => {
@@ -568,6 +580,56 @@ function EditStockContent() {
     );
   };
 
+  /**
+   * Colorless stock is still stored as a colour variant — one variant with no
+   * colour — because that is where sizes, quantities and the barcode live. So
+   * turning "colorless" on collapses the list to a single, colour-less variant
+   * instead of hiding it: otherwise the item would be saved with no sizes at
+   * all, and any extra variants would be saved invisibly.
+   */
+  const handleColorlessChange = (checked: boolean) => {
+    setIsColorless(checked);
+
+    if (!checked) {
+      return;
+    }
+
+    setColorVariants((variants) => {
+      const kept = variants[0];
+      if (!kept) {
+        return [
+          {
+            id: Date.now().toString(),
+            color: "",
+            colorCode: "#000000",
+            barcode: "",
+            sizeQuantities: [],
+          },
+        ];
+      }
+      // Keep the sizes and quantities already entered, drop the colour.
+      return [{ ...kept, color: "", colorCode: "#000000" }];
+    });
+  };
+
+  // A colorless item still needs somewhere to put its sizes. Covers stock saved
+  // before colorless items got a size editor, which has no variants at all.
+  useEffect(() => {
+    if (isColorless && colorVariants.length === 0) {
+      setColorVariants([
+        {
+          id: Date.now().toString(),
+          color: "",
+          colorCode: "#000000",
+          barcode: "",
+          sizeQuantities: [],
+        },
+      ]);
+    }
+  }, [isColorless, colorVariants.length]);
+
+  const colorlessVariant = isColorless ? colorVariants[0] : undefined;
+
   // EAN-13 barcode generation function
   const generateBarcode = (variantId: string) => {
     // EAN-13 format: Country(2-3) + Manufacturer(4-5) + Product(5) + Check(1) = 13 digits
@@ -788,15 +850,17 @@ function EditStockContent() {
       const stockData: CreateStockRequest = {
         groupName: groupName.trim(),
         category: category || undefined,
-        unitPrice: parseFloat(unitPrice),
-        originalPrice: parseFloat(originalPrice),
+        // The form collects prices in the currency selected in the top nav bar;
+        // stock is always stored in the business default currency.
+        unitPrice: currency.toBase(parseFloat(unitPrice)),
+        originalPrice: currency.toBase(parseFloat(originalPrice)),
         releaseDate,
         shop: selectedShops[0],
         isColorless,
         groupImage: groupImage,
         wholesaleTiers: wholesaleTiers.map((tier) => ({
           minQuantity: tier.minQuantity,
-          price: tier.price,
+          price: currency.toBase(tier.price),
         })),
         colorVariants: variantsWithBarcodes.map((variant) => ({
           color: variant.color,
@@ -943,6 +1007,10 @@ function EditStockContent() {
                 </h2>
               </div>
               <div className="p-4 md:p-6">
+                <CurrencyConversionNotice
+                  currency={currency}
+                  className="mb-4"
+                />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left - Group Image */}
                   <div>
@@ -1087,7 +1155,9 @@ function EditStockContent() {
                         <input
                           type="checkbox"
                           checked={isColorless}
-                          onChange={(e) => setIsColorless(e.target.checked)}
+                          onChange={(e) =>
+                            handleColorlessChange(e.target.checked)
+                          }
                           className="rounded border-gray-300 text-cyan-600 focus:ring-cyan-400"
                         />
                         <span className="ml-2 text-sm text-gray-700">
@@ -1185,6 +1255,46 @@ function EditStockContent() {
                 )}
               </div>
             </div>
+
+            {/* Sizes & Quantities Section (colorless stock) */}
+            {isColorless && colorlessVariant && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-rose-50">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-1.5 h-8 bg-gradient-to-b from-pink-500 to-rose-500 rounded-full shrink-0"></div>
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold text-gray-900 truncate">
+                        Sizes &amp; Quantities
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Colorless stock — one entry, no color variants
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 bg-gray-50/50">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+                    <SizeQuantityEditor
+                      availableSizes={availableSizes}
+                      sizeQuantities={colorlessVariant.sizeQuantities}
+                      onToggleSize={(size) => {
+                        const isSelected = colorlessVariant.sizeQuantities.some(
+                          (sq) => sq.size === size,
+                        );
+                        if (isSelected) {
+                          removeSizeFromVariant(colorlessVariant.id, size);
+                        } else {
+                          addSizeToVariant(colorlessVariant.id, size);
+                        }
+                      }}
+                      onQuantityChange={(size, quantity) =>
+                        updateSizeQuantity(colorlessVariant.id, size, quantity)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Color Variants Section */}
             {!isColorless && (

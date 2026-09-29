@@ -464,13 +464,12 @@ export function TopNavBar({
             )}
 
             {/* Notifications */}
-            <div className="relative" ref={notificationDropdownRef}>
+            {/* <div className="relative" ref={notificationDropdownRef}>
               <button
                 onClick={() => {
                   const opening = !showNotificationDropdown;
                   setShowNotificationDropdown(opening);
-                  // Clear the badge on open only, so closing the dropdown
-                  // cannot re-acknowledge anything that arrived while it was up.
+            
                   if (opening) markAllSeen();
                 }}
                 className="relative cursor-pointer focus:outline-none flex items-center"
@@ -488,16 +487,16 @@ export function TopNavBar({
                     {unseenCount > 99 ? "99+" : unseenCount}
                   </span>
                 )}
-              </button>
+              </button> */}
 
               {/* Notification Dropdown */}
-              {showNotificationDropdown && (
+              {/* {showNotificationDropdown && (
                 <NotificationDropdown 
                   onClose={() => setShowNotificationDropdown(false)} 
                   triggerRef={notificationDropdownRef}
                 />
               )}
-            </div>
+            </div> */}
 
             {/* User Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>

@@ -13,6 +13,14 @@ interface CurrencyContextType {
   selectedCurrency: "THB" | "MMK";
   defaultCurrency: "THB" | "MMK";
   currencyRate: number;
+  /**
+   * False until the business settings have been read once.
+   *
+   * Screens that convert stored prices for editing must wait for this, because
+   * before the first read `defaultCurrency` is only the "THB" placeholder and
+   * converting against it would corrupt the values.
+   */
+  isCurrencySettingsLoaded: boolean;
   setSelectedCurrency: (currency: "THB" | "MMK") => void;
   convertPrice: (price: number) => number;
   getCurrencySymbol: (currency?: "THB" | "MMK") => string;
@@ -43,6 +51,8 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
   );
   const [defaultCurrency, setDefaultCurrency] = useState<"THB" | "MMK">("THB");
   const [currencyRate, setCurrencyRate] = useState<number>(0);
+  const [isCurrencySettingsLoaded, setIsCurrencySettingsLoaded] =
+    useState(false);
 
   // Load currency settings from business settings
   const loadCurrencySettings = async () => {
@@ -56,6 +66,8 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
       }
     } catch (error) {
       console.error("Error loading currency settings:", error);
+    } finally {
+      setIsCurrencySettingsLoaded(true);
     }
   };
 
@@ -71,6 +83,13 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
   // Convert price from default currency to selected currency
   const convertPrice = (price: number): number => {
     if (selectedCurrency === defaultCurrency) {
+      return price;
+    }
+
+    // Without a configured rate a conversion would produce 0 or Infinity, which
+    // reads as a real price on screen. Showing the unconverted amount is wrong
+    // too, but it is at least recognisably the stored number.
+    if (!currencyRate || currencyRate <= 0) {
       return price;
     }
 
@@ -120,6 +139,7 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     selectedCurrency,
     defaultCurrency,
     currencyRate,
+    isCurrencySettingsLoaded,
     setSelectedCurrency,
     convertPrice,
     getCurrencySymbol,
